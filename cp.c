@@ -1,47 +1,61 @@
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
-#include <stdbool.h>
-void crack_password(const char *target) {
-    char guess[100];
-    long long iterations = 0;
-    
-    clock_t start = clock();
-    bool found = false;
-    printf("Analyzing complexity...\n");
-    for (long long i = 0; i < 1000000000; i++) {
-        iterations++;
-        sprintf(guess, "%lld", i); 
-        
-        if (strcmp(guess, target) == 0) {
-            found = true;
-            break;
-        }
+#include <ctype.h>
+#include <math.h>
+
+void test(const char *t) {
+    int l = strlen(t);
+    int d = 0, lt = 0, s = 0;
+
+    // Check character types
+    for (int i = 0; i < l; i++) {
+        if (isdigit(t[i])) d = 1;
+        else if (isalpha(t[i])) lt = 1;
+        else s = 1;
     }
+
+    // Calculate pool size
+    int p = 0;
+    if (d)  p += 10;
+    if (lt) p += 26;
+    if (s)  p += 32;
+    if (p == 0) p = 1;
+
+    printf("\n--- Result ---\n");
     
-    clock_t end = clock();
-    double time_taken = ((double)(end - start)) / CLOCKS_PER_SEC;
-    printf("\n--- Analysis Complete ---\n");
-    if (found) {
-        printf("Password Cracked Successfully!\n");
+    // Check strength category
+    if (l <= 4) {
+        printf("Strength: VERY WEAK\n");
+    } else if (l < 8) {
+        if (lt && d) printf("Strength: MEDIUM\n");
+        else printf("Strength: WEAK\n");
     } else {
-        printf("Search space exhausted or password too complex.\n");
+        if (lt && d) printf("Strength: STRONG\n");
+        else printf("Strength: MEDIUM\n");
     }
-    printf("Total Iterations: %lld\n", iterations);
-    printf("Time Elapsed:     %.6f seconds\n", time_taken);
+
+    // Calculate time to crack
+    double c = pow(p, l);
+    double sec = c / 10000000.0;
+
+    printf("Length  : %d\n", l);
+    
+    if (sec < 0.001) {
+        printf("Time    : Instantly\n");
+    } else if (sec < 60) {
+        printf("Time    : %.2f seconds\n", sec);
+    } else if (sec < 3600) {
+        printf("Time    : %.2f minutes\n", sec / 60.0);
+    } else {
+        printf("Time    : %.2f hours\n", sec / 3600.0);
+    }
 }
 
 int main() {
-    char password[100];
-    
-    printf("=====================================\n");
-    printf("   EXPERT PASSWORD STRENGTH TESTER   \n");
-    printf("=====================================\n");
-    printf("Enter target password (try a number like 123456): ");
-    
-    if (scanf("%99s", password) == 1) {
-        crack_password(password);
+    char pass[100];
+    printf("Enter password: ");
+    if (scanf("%99s", pass) == 1) {
+        test(pass);
     }
-    
     return 0;
 }
