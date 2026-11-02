@@ -1,61 +1,92 @@
+
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
 
-void test(const char *t) {
-    int l = strlen(t);
-    int d = 0, lt = 0, s = 0;
+#define MAX_PASSWORD 256
 
-    // Check character types
-    for (int i = 0; i < l; i++) {
-        if (isdigit(t[i])) d = 1;
-        else if (isalpha(t[i])) lt = 1;
-        else s = 1;
+void analyze_password(const char *password) {
+    int length = (int)strlen(password);
+
+    int lower = 0, upper = 0, digit = 0, special = 0;
+    int pool = 0;
+
+    for (int i = 0; i < length; i++) {
+        unsigned char c = (unsigned char)password[i];
+
+        if (islower(c)) lower = 1;
+        else if (isupper(c)) upper = 1;
+        else if (isdigit(c)) digit = 1;
+        else if (isprint(c)) special = 1;
     }
 
-    // Calculate pool size
-    int p = 0;
-    if (d)  p += 10;
-    if (lt) p += 26;
-    if (s)  p += 32;
-    if (p == 0) p = 1;
+    if (lower) pool += 26;
+    if (upper) pool += 26;
+    if (digit) pool += 10;
+    if (special) pool += 33;
 
-    printf("\n--- Result ---\n");
-    
-    // Check strength category
-    if (l <= 4) {
-        printf("Strength: VERY WEAK\n");
-    } else if (l < 8) {
-        if (lt && d) printf("Strength: MEDIUM\n");
-        else printf("Strength: WEAK\n");
-    } else {
-        if (lt && d) printf("Strength: STRONG\n");
-        else printf("Strength: MEDIUM\n");
+    printf("\n========== PASSWORD ANALYSIS ==========\n");
+    printf("Length: %d characters\n", length);
+    printf("Lowercase: %s\n", lower ? "Yes" : "No");
+    printf("Uppercase: %s\n", upper ? "Yes" : "No");
+    printf("Digits: %s\n", digit ? "Yes" : "No");
+    printf("Special characters: %s\n", special ? "Yes" : "No");
+
+    if (pool == 0 || length == 0) {
+        printf("Invalid password input.\n");
+        return;
     }
 
-    // Calculate time to crack
-    double c = pow(p, l);
-    double sec = c / 10000000.0;
+    long double entropy = length * log2l(pool);
 
-    printf("Length  : %d\n", l);
-    
-    if (sec < 0.001) {
-        printf("Time    : Instantly\n");
-    } else if (sec < 60) {
-        printf("Time    : %.2f seconds\n", sec);
-    } else if (sec < 3600) {
-        printf("Time    : %.2f minutes\n", sec / 60.0);
-    } else {
-        printf("Time    : %.2f hours\n", sec / 3600.0);
-    }
+    printf("Estimated search space: 2^%.2Lf combinations\n", entropy);
+    printf("Theoretical entropy: %.2Lf bits\n", entropy);
+
+    if (length < 8 || entropy < 40)
+        printf("Strength: WEAK\n");
+    else if (entropy < 60)
+        printf("Strength: MODERATE\n");
+    else if (entropy < 80)
+        printf("Strength: STRONG\n");
+    else
+        printf("Strength: VERY STRONG\n");
+
+    printf("\nNote: This is a theoretical estimate, not a real-world"
+           " password security guarantee.\n");
 }
 
-int main() {
-    char pass[100];
-    printf("Enter password: ");
-    if (scanf("%99s", pass) == 1) {
-        test(pass);
+int main(void) {
+    char password[MAX_PASSWORD];
+
+    printf("====================================\n");
+    printf("       PASSWORD STRENGTH CHECKER\n");
+    printf("               v1.1.0\n");
+    printf("====================================\n");
+
+    printf("Enter a sample password: ");
+
+    if (fgets(password, sizeof(password), stdin) == NULL) {
+        printf("Error reading input.\n");
+        return 1;
     }
+
+    password[strcspn(password, "\n")] = '\0';
+
+    if (strchr(password, '\n') == NULL &&
+        strlen(password) == sizeof(password) - 1) {
+        int ch;
+        while ((ch = getchar()) != '\n' && ch != EOF) {}
+        printf("Input too long. Maximum length is 254 characters.\n");
+        return 1;
+    }
+
+    if (password[0] == '\0') {
+        printf("Password cannot be empty.\n");
+        return 1;
+    }
+
+    analyze_password(password);
+
     return 0;
 }
