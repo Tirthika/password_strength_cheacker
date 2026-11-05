@@ -64,8 +64,8 @@ The program examines the character types present in the password and uses the po
 ## Version
 
 **Current version:** v1.0.0
-
-**Next planned version:** v1.1.0
+**Current version:** v1.0.0
+**Next planned version:** v1.1.1
 
 ## License
 
